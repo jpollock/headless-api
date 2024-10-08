@@ -6,16 +6,21 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
+    "start": "node server.js",
     "build": "eslint app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/pubsub": "^4.7.2",
     "axios": "^1.7.7",
     "express": "^4.21.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "lokijs": "^1.5.12",
+    "mongodb": "^6.9.0",
+    "node-cron": "^3.0.3",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "eslint": "^9.12.0",
