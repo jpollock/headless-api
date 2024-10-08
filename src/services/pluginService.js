@@ -147,11 +147,9 @@ export async function fetchPluginUpdates(lastKnownUpdate) {
 
     try {
       
-      const data = await fetchFromRemoteAPI(path, params);
+      const response = await fetchFromRemoteAPI(path, params);
 
-      
-      const plugins = data.plugins;
-
+      const plugins = response.data.plugins;
       if (plugins.length === 0) {
         console.log('No more plugins to process. Ending update process.');
         break;
