@@ -6,8 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "build": "eslint server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +22,6 @@
     "redis": "^4.7.0"
   },
   "devDependencies": {
-    "eslint": "^9.12.0",
     "globals": "^15.10.0"
   }
 }
