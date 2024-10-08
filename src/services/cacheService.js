@@ -76,6 +76,7 @@ export async function set(key, value) {
     // Set in MongoDB
     const db = await connectToMongo();
     if (db) {
+      console.log('mongoCollection:', config.mongoDb);
       console.log('mongoCollection:', config.mongoCollection);
       const collection = db.collection(config.mongoCollection);
       await collection.updateOne(

@@ -55,8 +55,10 @@ export async function queryPlugins(query) {
     action: 'query_plugins',
     ...query
   };
-
-  return getOrSetCache(path, params);
+  
+  const response = await fetchFromRemoteAPI(path, params);
+  
+  return response.data;
 }
 
 async function getLastKnownUpdate() {
@@ -144,7 +146,10 @@ export async function fetchPluginUpdates(lastKnownUpdate) {
     console.log(`Fetching page ${page}...`);
 
     try {
-      const data = await getOrSetCache(path, params);
+      
+      const data = await fetchFromRemoteAPI(path, params);
+
+      
       const plugins = data.plugins;
 
       if (plugins.length === 0) {
