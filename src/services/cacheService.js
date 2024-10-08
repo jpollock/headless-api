@@ -11,13 +11,19 @@ const memoryCache = db.addCollection('cache');
 let mongoClient = null;
 let mongoDb = null;
 
-
 async function connectToMongo() {
   if (!mongoClient) {
-    mongoClient = new MongoClient(config.mongoUrl);
-    await mongoClient.connect();
-    mongoDb = mongoClient.db(config.mongoDb);
-    console.log('Connected to MongoDB:', config.mongoDb);
+    try {
+      console.log('Attempting to connect to MongoDB...');
+      mongoClient = new MongoClient(config.mongoUrl);
+      await mongoClient.connect();
+      mongoDb = mongoClient.db(config.mongoDb);
+      console.log('Connected to MongoDB:', config.mongoDb);
+    } catch (error) {
+      console.error('Failed to connect to MongoDB:', error);
+      mongoClient = null;
+      mongoDb = null;
+    }
   }
   return mongoDb;
 }
@@ -32,12 +38,14 @@ export async function get(key) {
 
     // If not in LokiJS, try MongoDB
     const db = await connectToMongo();
-    const collection = db.collection(config.mongoCollection);
-    const doc = await collection.findOne({ key });
-    if (doc) {
-      // Store in LokiJS for future fast access
-      memoryCache.insert({ key, value: doc.value });
-      return doc.value;
+    if (db) {
+      const collection = db.collection(config.mongoCollection);
+      const doc = await collection.findOne({ key });
+      if (doc) {
+        // Store in LokiJS for future fast access
+        memoryCache.insert({ key, value: doc.value });
+        return doc.value;
+      }
     }
   } catch (error) {
     console.error('Cache get error:', error);
@@ -49,7 +57,6 @@ export async function set(key, value) {
   try {
     // Set in LokiJS
     const existingItem = memoryCache.findOne({ key });
-    
     if (existingItem) {
       existingItem.value = value;
       memoryCache.update(existingItem);
@@ -59,13 +66,17 @@ export async function set(key, value) {
 
     // Set in MongoDB
     const db = await connectToMongo();
-    console.log('mongoCollection:', config.mongoCollection);
-    const collection = db.collection(config.mongoCollection);
-    await collection.updateOne(
-      { key },
-      { $set: { value } },
-      { upsert: true }
-    );
+    if (db) {
+      console.log('mongoCollection:', config.mongoCollection);
+      const collection = db.collection(config.mongoCollection);
+      await collection.updateOne(
+        { key },
+        { $set: { value } },
+        { upsert: true }
+      );
+    } else {
+      console.warn('MongoDB not available, data only cached in memory');
+    }
   } catch (error) {
     console.error('Cache set error:', error);
   }
@@ -75,6 +86,10 @@ export function generateCacheKey(path, params) {
   const fullUrl = `${path}?${new URLSearchParams(params).toString()}`;
   console.log('Generated cache key:', fullUrl);
   return crypto.createHash('md5').update(fullUrl).digest('hex');
+}
+
+export async function getMongoDb() {
+  return connectToMongo();
 }
 
 // Optional: Persist LokiJS to file system
@@ -97,11 +112,6 @@ export function loadLokiDB() {
       console.log('LokiJS database loaded successfully');
     }
   });
-}
-
-export async function getMongoDb() {
-    await connectToMongo();
-    return mongoDb;
 }
 
 // Close MongoDB connection
