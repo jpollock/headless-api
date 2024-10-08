@@ -1,32 +1,9 @@
 import app from './src/app.js';
 import config from './src/config/index.js';
-import { initializePubSub } from './src/services/pubsubService.js';
-import { fetchPluginUpdates } from './src/services/pluginService.js';
-import cron from 'node-cron';
-import { env, exit } from 'node:process';
 
-const port = env.PORT || config.port || 3000;
+const port = config.port || 3000;
+const host = 'localhost'; // This will make it listen on all available network interfaces
 
-async function startServer() {
-  try {
-    if (config.pubsub.enabled) {
-      await initializePubSub();
-    } else {
-      console.log('Pub/Sub is disabled.');
-    }
-
-    cron.schedule(config.updateInterval, async () => {
-      console.log('Running scheduled plugin update task');
-      await fetchPluginUpdates();
-    });
-
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`Server running on port ${port}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    exit(1);
-  }
-}
-
-startServer();
+app.listen(port, host, () => {
+  console.log(`Server running on http://${host}:${port}`);
+});
