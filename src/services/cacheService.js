@@ -12,21 +12,30 @@ let mongoClient = null;
 let mongoDb = null;
 
 async function connectToMongo() {
-  if (!mongoClient) {
-    try {
-      console.log('Attempting to connect to MongoDB...');
-      mongoClient = new MongoClient(config.mongoUrl);
-      await mongoClient.connect();
-      mongoDb = mongoClient.db(config.mongoDb);
-      console.log('Connected to MongoDB:', config.mongoDb);
-    } catch (error) {
-      console.error('Failed to connect to MongoDB:', error);
-      mongoClient = null;
-      mongoDb = null;
+    if (!mongoClient) {
+      try {
+        console.log('Attempting to connect to MongoDB...');
+        const options = {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        };
+        if (config.mongoUseSSL) {
+          options.ssl = true;
+          options.tls = true;
+          options.tlsAllowInvalidCertificates = true; // Only use this for testing, remove in production
+        }
+        mongoClient = new MongoClient(config.mongoUrl, options);
+        await mongoClient.connect();
+        mongoDb = mongoClient.db(config.mongoDb);
+        console.log('Connected to MongoDB:', config.mongoDb);
+      } catch (error) {
+        console.error('Failed to connect to MongoDB:', error);
+        mongoClient = null;
+        mongoDb = null;
+      }
     }
+    return mongoDb;
   }
-  return mongoDb;
-}
 
 export async function get(key) {
   try {

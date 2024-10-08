@@ -1,8 +1,9 @@
 const config = {
-    port: process.env.PORT || 3001,
+    port: process.env.PORT || 3000,
     mongoUrl: process.env.MONGO_URL || 'mongodb://localhost:27017/plugin_cache',
     mongoDb: 'ptc_cache',
     mongoCollection: 'plugins_cache',
+    mongoUseSSL: process.env.MONGODB_USE_SSL === 'true',
     remoteApiBaseUrl: 'https://api.wordpress.org',
     pubsub: {
       enabled: process.env.PUBSUB_ENABLED === 'true',
