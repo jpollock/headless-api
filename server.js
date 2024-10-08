@@ -3,8 +3,9 @@ import config from './src/config/index.js';
 import { initializePubSub } from './src/services/pubsubService.js';
 import { fetchPluginUpdates } from './src/services/pluginService.js';
 import cron from 'node-cron';
+import { env, exit } from 'node:process';
 
-const port = process.env.PORT || config.port || 3000;
+const port = env.PORT || config.port || 3000;
 
 async function startServer() {
   try {
@@ -24,7 +25,7 @@ async function startServer() {
     });
   } catch (error) {
     console.error('Failed to start server:', error);
-    process.exit(1);
+    exit(1);
   }
 }
 
