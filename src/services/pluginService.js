@@ -39,7 +39,7 @@ async function getOrSetCache(path, params) {
   return response.data;
 }
 async function getOrSetCacheSlug(path, params) {
-    const cacheKey = cacheService.generateCacheKeySlug(path, params);
+    const cacheKey = cacheService.generateCacheKeyForSlug(path, params);
     let cachedData = await cacheService.get(cacheKey);
   
     if (cachedData) {
@@ -63,7 +63,7 @@ export async function getPluginInformation(query) {
 
   return getOrSetCacheSlug(path, params);
 }
-
+/*
 export async function queryPlugins(query) {
   const path = '/plugins/info/1.2/';
   const params = {
@@ -74,7 +74,44 @@ export async function queryPlugins(query) {
   const response = await fetchFromRemoteAPI(path, params);
   
   return response.data;
-}
+}*/
+
+export async function queryPlugins(query) {
+    const page = parseInt(query.request?.page) || 1;
+    const perPage = parseInt(query.request?.per_page) || 250;
+    const browse = query.request?.browse || 'updated';
+  
+    const db = await cacheService.getMongoDb();
+    const collection = db.collection(config.mongoCollection);
+  
+    const totalPlugins = await collection.countDocuments();
+    const totalPages = Math.ceil(totalPlugins / perPage);
+  
+    let plugins;
+    if (browse === 'updated') {
+      plugins = await collection.find({})
+        .sort({ 'value.last_updated': -1 })
+        .skip((page - 1) * perPage)
+        .limit(perPage)
+        .toArray();
+    } else {
+      plugins = await collection.find({})
+        .skip((page - 1) * perPage)
+        .limit(perPage)
+        .toArray();
+    }
+  
+    const result = {
+      info: {
+        page: page,
+        pages: totalPages,
+        results: totalPlugins
+      },
+      plugins: plugins.map(doc => doc.value)
+    };
+  
+    return result;
+  }
 
 async function getLastKnownUpdate() {
   try {
