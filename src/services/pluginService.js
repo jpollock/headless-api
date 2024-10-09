@@ -176,10 +176,9 @@ export async function triggerPluginUpdate(force) {
 
 export async function fetchPluginUpdates(lastKnownUpdate, force) {
   let page = 1;
+  lastKnownUpdate = await getLastKnownUpdate();
   let latestUpdate = lastKnownUpdate;
-  if (lastKnownUpdate === undefined) {
-    lastKnownUpdate = await getLastKnownUpdate();
-  }
+
   let continueUpdating = true;
   let totalUpdatedPlugins = 0;
 
