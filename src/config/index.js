@@ -16,7 +16,7 @@ const config = {
         userId: 'wp-plugin-notifier',
         channel: 'wp-plugin-notifications'
     },
-    updateInterval: process.env.UPDATE_INTERVAL || '*/60 * * * *',
+    updateInterval: process.env.UPDATE_INTERVAL || '*/1 * * * *',
     devMode: process.env.NODE_ENV === 'development',
     maxPagesInDev: parseInt(process.env.MAX_PAGES_IN_DEV, 10) || 1,
     maxPluginsInDev: parseInt(process.env.MAX_PLUGINS_IN_DEV, 10) || 1
