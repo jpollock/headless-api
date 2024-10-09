@@ -176,8 +176,8 @@ export async function triggerPluginUpdate(force) {
 export async function fetchPluginUpdates(lastKnownUpdate, force) {
   let page = 1;
   let latestUpdate = lastKnownUpdate;
-  if (latestUpdate === undefined) {
-    latestUpdate = await getLastKnownUpdate();
+  if (lastKnownUpdate === undefined) {
+    lastKnownUpdate = await getLastKnownUpdate();
   }
   let continueUpdating = true;
   let totalUpdatedPlugins = 0;
@@ -215,9 +215,9 @@ export async function fetchPluginUpdates(lastKnownUpdate, force) {
 
       for (const plugin of plugins) {
         console.log(`last updated: ${plugin.last_updated} last known update: ${latestUpdate}`);
-        console.log(parseCustomDate(plugin.last_updated).getTime(), parseCustomDate(latestUpdate).getTime());
-        console.log(parseCustomDate(plugin.last_updated).getTime() <= parseCustomDate(latestUpdate).getTime());
-        if (!force && parseCustomDate(plugin.last_updated).getTime() <= parseCustomDate(latestUpdate).getTime()) {
+        //console.log(parseCustomDate(plugin.last_updated).getTime(), parseCustomDate(latestUpdate).getTime());
+        //console.log(parseCustomDate(plugin.last_updated).getTime() <= parseCustomDate(latestUpdate).getTime());
+        if (!force && parseCustomDate(plugin.last_updated).getTime() <= parseCustomDate(lastKnownUpdate).getTime()) {
           console.log(`Reached plugin with last_updated <= last known update. Ending update process.`);
           continueUpdating = false;
           break;
