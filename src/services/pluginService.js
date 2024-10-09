@@ -86,7 +86,7 @@ async function getLastKnownUpdate() {
   }
 }
 
-export async function triggerPluginUpdate() {
+export async function triggerPluginUpdate(force) {
   if (updateInProgress) {
     return { status: 'Update already in progress' };
   }
@@ -96,7 +96,7 @@ export async function triggerPluginUpdate() {
 
   try {
     const lastKnownUpdate = await getLastKnownUpdate();
-    const { latestUpdate, totalUpdatedPlugins } = await fetchPluginUpdates(lastKnownUpdate);
+    const { latestUpdate, totalUpdatedPlugins } = await fetchPluginUpdates(lastKnownUpdate, force);
     
     // Update the file with the latest update time
     await fs.writeFile(LAST_UPDATE_FILE, latestUpdate);
@@ -120,7 +120,7 @@ export async function triggerPluginUpdate() {
   }
 }
 
-export async function fetchPluginUpdates(lastKnownUpdate) {
+export async function fetchPluginUpdates(lastKnownUpdate, force) {
   let page = 1;
   let latestUpdate = lastKnownUpdate;
   let continueUpdating = true;
@@ -158,7 +158,7 @@ export async function fetchPluginUpdates(lastKnownUpdate) {
       console.log(`Processing ${plugins.length} plugins from page ${page}`);
 
       for (const plugin of plugins) {
-        if (parseCustomDate(plugin.last_updated) <= parseCustomDate(lastKnownUpdate)) {
+        if (!force && parseCustomDate(plugin.last_updated) <= parseCustomDate(lastKnownUpdate)) {
           console.log(`Reached plugin with last_updated <= last known update. Ending update process.`);
           continueUpdating = false;
           break;

@@ -22,7 +22,8 @@ router.get('/info/1.2', async (req, res, next) => {
 
 router.post('/update', async (req, res, next) => {
   try {
-    const result = await pluginService.triggerPluginUpdate();
+    const force = req.query.force === 'true';
+    const result = await pluginService.triggerPluginUpdate(force);
     res.json(result);
   } catch (error) {
     next(error);
