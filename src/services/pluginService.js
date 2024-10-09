@@ -49,6 +49,7 @@ async function getOrSetCacheSlug(path, params) {
   
     console.log('Cache miss for:', cacheKey);
     const response = await fetchFromRemoteAPI(path, params);
+    response.data.last_updated_time = parseCustomDate(response.data.last_updated).getTime();
     await cacheService.set(cacheKey, response.data);
   
     return response.data;
