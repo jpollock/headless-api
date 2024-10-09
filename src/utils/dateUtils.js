@@ -16,7 +16,7 @@ export function parseCustomDate(dateString) {
     }
 
     // Check if the date is in ISO format
-    if (dateString.includes('T')) {
+    if (dateString.includes('T') && dateString.includes('Z')) {
         return new Date(dateString);
     }
 

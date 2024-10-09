@@ -9,7 +9,7 @@ const config = {
       enabled: process.env.PUBSUB_ENABLED === 'true',
       topicName: process.env.PUBSUB_TOPIC_NAME || 'plugin_updates'
     },
-    updateInterval: process.env.UPDATE_INTERVAL || '*/30 * * * *',
+    updateInterval: process.env.UPDATE_INTERVAL || '*/1 * * * *',
     devMode: process.env.NODE_ENV === 'development',
     maxPagesInDev: parseInt(process.env.MAX_PAGES_IN_DEV, 10) || 1,
     maxPluginsInDev: parseInt(process.env.MAX_PLUGINS_IN_DEV, 10) || 1

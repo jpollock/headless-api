@@ -38,7 +38,22 @@ async function getOrSetCache(path, params) {
 
   return response.data;
 }
-
+async function getOrSetCacheSlug(path, params) {
+    const cacheKey = cacheService.generateCacheKeySlug(path, params);
+    let cachedData = await cacheService.get(cacheKey);
+  
+    if (cachedData) {
+      console.log('Cache hit for:', cacheKey);
+      return cachedData;
+    }
+  
+    console.log('Cache miss for:', cacheKey);
+    const response = await fetchFromRemoteAPI(path, params);
+    await cacheService.set(cacheKey, response.data);
+  
+    return response.data;
+  }
+  
 export async function getPluginInformation(query) {
   const path = '/plugins/info/1.2/';
   const params = {
@@ -46,7 +61,7 @@ export async function getPluginInformation(query) {
     ...query
   };
 
-  return getOrSetCache(path, params);
+  return getOrSetCacheSlug(path, params);
 }
 
 export async function queryPlugins(query) {
@@ -63,6 +78,7 @@ export async function queryPlugins(query) {
 
 async function getLastKnownUpdate() {
   try {
+    console.log('Checking last known update...');
     // First, check MongoDB for the most recent plugin
     const db = await cacheService.getMongoDb();
     const collection = db.collection(config.mongoCollection);
@@ -123,11 +139,14 @@ export async function triggerPluginUpdate(force) {
 export async function fetchPluginUpdates(lastKnownUpdate, force) {
   let page = 1;
   let latestUpdate = lastKnownUpdate;
+  if (latestUpdate === undefined) {
+    latestUpdate = await getLastKnownUpdate();
+  }
   let continueUpdating = true;
   let totalUpdatedPlugins = 0;
 
   console.log('Starting plugin update process...');
-  console.log('Last known update:', lastKnownUpdate);
+  console.log('Last known update:', latestUpdate);
 
   while (continueUpdating) {
     if (config.devMode && page > config.maxPagesInDev) {
@@ -158,7 +177,10 @@ export async function fetchPluginUpdates(lastKnownUpdate, force) {
       console.log(`Processing ${plugins.length} plugins from page ${page}`);
 
       for (const plugin of plugins) {
-        if (!force && parseCustomDate(plugin.last_updated) <= parseCustomDate(lastKnownUpdate)) {
+        console.log(`last updated: ${plugin.last_updated} last known update: ${latestUpdate}`);
+        console.log(parseCustomDate(plugin.last_updated).getTime(), parseCustomDate(latestUpdate).getTime());
+        console.log(parseCustomDate(plugin.last_updated).getTime() <= parseCustomDate(latestUpdate).getTime());
+        if (!force && parseCustomDate(plugin.last_updated).getTime() <= parseCustomDate(latestUpdate).getTime()) {
           console.log(`Reached plugin with last_updated <= last known update. Ending update process.`);
           continueUpdating = false;
           break;
@@ -169,9 +191,9 @@ export async function fetchPluginUpdates(lastKnownUpdate, force) {
         }
     
         
-        await cachePlugin(plugin);
+        const result = await cachePlugin(plugin);
         
-        if (config.pubsub.enabled) {
+        if (config.pubsub.enabled && result == 1) {
           await publishPluginUpdate(plugin);
         }
 
@@ -182,6 +204,7 @@ export async function fetchPluginUpdates(lastKnownUpdate, force) {
         if (parseCustomDate(plugin.last_updated) > parseCustomDate(latestUpdate)) {
           latestUpdate = plugin.last_updated;
         }
+        console.log(`ending last updated: ${latestUpdate}`);
       }
 
       console.log(`Updated plugins on page ${page}`);
@@ -206,8 +229,9 @@ async function cachePlugin(plugin) {
         slug: plugin.slug
     }
   };
-  const pluginCacheKey = cacheService.generateCacheKey(pluginPath, pluginParams);
-  await cacheService.set(pluginCacheKey, plugin);
+  const pluginCacheKey = cacheService.generateCacheKeyForSlug(plugin.slug);
+  const result = await cacheService.set(pluginCacheKey, plugin);
+  return result;
 }
 
 export function getUpdateStatus() {

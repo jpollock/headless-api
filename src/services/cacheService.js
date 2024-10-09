@@ -76,17 +76,13 @@ export async function set(key, value) {
     // Set in MongoDB
     const db = await connectToMongo();
     if (db) {
-      console.log('mongoCollection:', config.mongoDb);
-      console.log('mongoCollection:', config.mongoCollection);
       const collection = db.collection(config.mongoCollection);
       const result = await collection.updateOne(
         { key },
         { $set: { value } },
         { upsert: true }
       );
-      
-      console.log(result);
-      
+            
       if (result.matchedCount > 0) {
         console.log("Document matched and updated");
       } else if (result.upsertedCount > 0) {
@@ -95,18 +91,25 @@ export async function set(key, value) {
       } else {
         console.log("No changes made");
       }
+      return result.matchedCount;
     } else {
       console.warn('MongoDB not available, data only cached in memory');
     }
   } catch (error) {
     console.error('Cache set error:', error);
   }
+  return -1;
 }
 
 export function generateCacheKey(path, params) {
   const fullUrl = `${path}?${new URLSearchParams(params).toString()}`;
-  console.log('Generated cache key:', fullUrl);
+  //console.log('Generated cache key:', fullUrl);
   return crypto.createHash('md5').update(fullUrl).digest('hex');
+}
+
+export function generateCacheKeyForSlug(slug) {
+  //console.log('Generated cache key:', slug);
+  return crypto.createHash('md5').update(slug).digest('hex');
 }
 
 export async function getMongoDb() {
