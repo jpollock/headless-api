@@ -1,32 +1,49 @@
+import PubNub from 'pubnub';
 import { PubSub } from '@google-cloud/pubsub';
 import config from '../config/index.js';
 
 let pubsub;
 let topic;
+let pubnub;
 
 if (config.pubsub.enabled) {
   pubsub = new PubSub();
   topic = pubsub.topic(config.pubsub.topicName);
 }
 
-export async function publishPluginUpdate(plugin) {
-  if (!config.pubsub.enabled) {
-    console.log('Pub/Sub is disabled. Skipping message publication.');
-    return;
-  }
+if (config.pubnub.enabled) {
+  pubnub = new PubNub({
+    publishKey: config.pubnub.publishKey,
+    subscribeKey: config.pubnub.subscribeKey,
+    userId: config.pubnub.userId
+  });
+}
 
+export async function publishPluginUpdate(plugin) {
   const messageData = JSON.stringify({
     slug: plugin.slug,
     last_updated: plugin.last_updated
   });
 
-  try {
-    const messageId = await topic.publish(Buffer.from(messageData));
-    console.log(`Message ${messageId} published for plugin: ${plugin.slug}`);
-    return messageId;
-  } catch (error) {
-    console.error(`Error publishing update for plugin ${plugin.slug}:`, error);
-    throw error;
+  if (config.pubsub.enabled) {
+    try {
+      const messageId = await topic.publish(Buffer.from(messageData));
+      console.log(`Pub/Sub message ${messageId} published for plugin: ${plugin.slug}`);
+    } catch (error) {
+      console.error(`Error publishing Pub/Sub update for plugin ${plugin.slug}:`, error);
+    }
+  }
+
+  if (config.pubnub.enabled) {
+    try {
+      const result = await pubnub.publish({
+        channel: config.pubnub.channel,
+        message: JSON.parse(messageData)
+      });
+      console.log(`PubNub message published for plugin: ${plugin.slug}, timetoken: ${result.timetoken}`);
+    } catch (error) {
+      console.error(`Error publishing PubNub update for plugin ${plugin.slug}:`, error);
+    }
   }
 }
 
@@ -52,17 +69,16 @@ export async function ensureTopicExists() {
   }
 }
 
-export async function initializePubSub() {
-  if (!config.pubsub.enabled) {
+export async function initializeMessagingServices() {
+  if (config.pubsub.enabled) {
+    try {
+      await ensureTopicExists();
+      console.log('Pub/Sub service initialized successfully.');
+    } catch (error) {
+      console.error('Failed to initialize Pub/Sub service:', error);
+    }
+  } else {
     console.log('Pub/Sub is disabled. Skipping initialization.');
-    return;
   }
 
-  try {
-    await ensureTopicExists();
-    console.log('Pub/Sub service initialized successfully.');
-  } catch (error) {
-    console.error('Failed to initialize Pub/Sub service:', error);
-    throw error;
-  }
 }

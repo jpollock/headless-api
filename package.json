@@ -19,6 +19,7 @@
     "lokijs": "^1.5.12",
     "mongodb": "^6.9.0",
     "node-cron": "^3.0.3",
+    "pubnub": "^8.2.8",
     "redis": "^4.7.0"
   },
   "devDependencies": {

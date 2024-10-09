@@ -73,6 +73,8 @@ export async function set(key, value) {
       memoryCache.insert({ key, value });
     }
 
+    console.log(`plugin.last_updated_time: ${value.last_updated_time}`);
+
     // Set in MongoDB
     const db = await connectToMongo();
     if (db) {

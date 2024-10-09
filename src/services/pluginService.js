@@ -90,7 +90,7 @@ export async function queryPlugins(query) {
     let plugins;
     if (browse === 'updated') {
       plugins = await collection.find({})
-        .sort({ 'value.last_updated': -1 })
+        .sort({ 'value.last_updated_time': -1 })
         .skip((page - 1) * perPage)
         .limit(perPage)
         .toArray();
@@ -120,7 +120,7 @@ async function getLastKnownUpdate() {
     const db = await cacheService.getMongoDb();
     const collection = db.collection(config.mongoCollection);
     const mostRecentPlugin = await collection.find({})
-      .sort({ 'value.last_updated': -1 })
+      .sort({ 'value.last_updated_time': -1 })
       .limit(1)
       .toArray();
 
@@ -131,8 +131,8 @@ async function getLastKnownUpdate() {
 
     // If no plugins in MongoDB, check the file
     console.log('No plugins found in MongoDB, checking file');
-    const fileContent = await fs.readFile(LAST_UPDATE_FILE, 'utf-8');
-    return fileContent.trim() || formatCustomDate(new Date(0));
+    //const fileContent = await fs.readFile(LAST_UPDATE_FILE, 'utf-8');
+    return formatCustomDate(new Date(0));
   } catch (error) {
     console.log('Error reading last update, starting from scratch', error);
     return formatCustomDate(new Date(0));
@@ -227,7 +227,8 @@ export async function fetchPluginUpdates(lastKnownUpdate, force) {
             break;
         }
     
-        
+        plugin.last_updated_time = parseCustomDate(plugin.last_updated).getTime();
+        console.log(`plugin.last_updated_time: ${plugin.last_updated_time}`);
         const result = await cachePlugin(plugin);
         
         if (config.pubsub.enabled && result == 1) {
@@ -266,6 +267,7 @@ async function cachePlugin(plugin) {
         slug: plugin.slug
     }
   };
+  console.log(`plugin.last_updated_time: ${plugin.last_updated_time}`);
   const pluginCacheKey = cacheService.generateCacheKeyForSlug(plugin.slug);
   const result = await cacheService.set(pluginCacheKey, plugin);
   return result;

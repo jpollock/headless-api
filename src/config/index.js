@@ -9,6 +9,13 @@ const config = {
       enabled: process.env.PUBSUB_ENABLED === 'true',
       topicName: process.env.PUBSUB_TOPIC_NAME || 'plugin_updates'
     },
+    pubnub: {
+        enabled: true,
+        publishKey: process.env.PUBNUB_PUBLISH_KEY,
+        subscribeKey:  process.env.PUBNUB_SUBSCRIBE_KEY,
+        userId: 'wp-plugin-notifier',
+        channel: 'wp-plugin-notifications'
+    },
     updateInterval: process.env.UPDATE_INTERVAL || '*/1 * * * *',
     devMode: process.env.NODE_ENV === 'development',
     maxPagesInDev: parseInt(process.env.MAX_PAGES_IN_DEV, 10) || 1,
