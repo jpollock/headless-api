@@ -79,11 +79,22 @@ export async function set(key, value) {
       console.log('mongoCollection:', config.mongoDb);
       console.log('mongoCollection:', config.mongoCollection);
       const collection = db.collection(config.mongoCollection);
-      await collection.updateOne(
+      const result = await collection.updateOne(
         { key },
         { $set: { value } },
         { upsert: true }
       );
+      
+      console.log(result);
+      
+      if (result.matchedCount > 0) {
+        console.log("Document matched and updated");
+      } else if (result.upsertedCount > 0) {
+        console.log("New document inserted");
+        console.log("Inserted document ID:", result.upsertedId);
+      } else {
+        console.log("No changes made");
+      }
     } else {
       console.warn('MongoDB not available, data only cached in memory');
     }
